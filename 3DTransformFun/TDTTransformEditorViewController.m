@@ -29,6 +29,9 @@
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
+    if (!self.transform)
+        return 0;
+
     switch (self.transform.type) {
         case TransformTypeManual:
             return 4;
