@@ -78,7 +78,10 @@
 
 -(void)transformStackChangedData:(TDTTransformStackViewController *)stack
 {
+    BOOL restartAnimation = self.isAnimating;
+    self.isAnimating = NO;
     self.transformView.layer.transform = [stack allTransforms];
+    self.isAnimating = restartAnimation;
 }
 -(void)transformStack:(TDTTransformStackViewController *)stack selectedTransform:(TDTransform *)transform
 {
