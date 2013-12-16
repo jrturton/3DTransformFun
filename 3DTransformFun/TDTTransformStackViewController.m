@@ -73,8 +73,12 @@
 
 -(void)addTransform:(TDTransform*)transform;
 {
-    [self.transformStack insertObject:transform atIndex:0];
-    [self.tableView insertRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:0 inSection:0]] withRowAnimation:UITableViewRowAnimationAutomatic];
+    [self.transformStack addObject:transform];
+
+    NSIndexPath *path = [NSIndexPath indexPathForRow:[[self transformStack] count] - 1 inSection:0];
+    [self.tableView insertRowsAtIndexPaths:@[path] withRowAnimation:UITableViewRowAnimationAutomatic];
+    [self.tableView selectRowAtIndexPath:path animated:YES scrollPosition:UITableViewScrollPositionNone];
+    [self tableView:self.tableView didSelectRowAtIndexPath:path];
     [self.delegate transformStackChangedData:self];
 }
 
@@ -82,18 +86,17 @@
 {
     NSUInteger updatedRow = [self.transformStack indexOfObject:transform];
     if (updatedRow == NSNotFound) return;
-    
+
+    NSIndexPath *indexPath = [self.tableView indexPathForSelectedRow];
     [self.tableView reloadRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:updatedRow inSection:0]] withRowAnimation:UITableViewRowAnimationAutomatic];
+    [self.tableView selectRowAtIndexPath:indexPath animated:NO scrollPosition:UITableViewScrollPositionNone];
     [self.delegate transformStackChangedData:self];
 }
 
 -(CATransform3D)allTransforms
 {
-    // From the last transform to the first
     CATransform3D transform = CATransform3DIdentity;
-    NSEnumerator *enumerator = [self.transformStack reverseObjectEnumerator];
-    TDTransform *transformInStack;
-    while ((transformInStack = [enumerator nextObject]))
+    for (TDTransform *transformInStack in self.transformStack)
     {
         transform = CATransform3DConcat(transform, transformInStack.transform);
     }
