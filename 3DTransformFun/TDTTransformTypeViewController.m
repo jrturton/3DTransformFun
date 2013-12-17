@@ -28,18 +28,12 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-	// Do any additional setup after loading the view.
+    [self.tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:@"Cell"];
 }
 -(void)viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear:animated];
     [self.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:self.transformType inSection:0]].accessoryType = UITableViewCellAccessoryCheckmark;
-}
-
-- (void)didReceiveMemoryWarning
-{
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
 }
 
 -(NSArray*)transformTypes
@@ -62,7 +56,7 @@
 }
 -(UITableViewCell*)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"Cell"];
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"Cell" forIndexPath:indexPath];
     cell.textLabel.text = self.transformTypes[indexPath.row];
     return cell;
 }
@@ -74,7 +68,12 @@
     [self.delegate transformTypeSelected:self.transformType];
     [tableView cellForRowAtIndexPath:indexPath].accessoryType = UITableViewCellAccessoryCheckmark;
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
-    
 }
+
+-(CGSize)contentSizeForViewInPopover
+{
+    return CGSizeMake(320.0, 44.0 * 4);
+}
+
 
 @end

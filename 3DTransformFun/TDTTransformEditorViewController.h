@@ -11,7 +11,7 @@
 
 @protocol TransformEditorDelegate <NSObject>
 
--(void)transformEditorUpdatedTransform:(TDTransform*)transform;
+-(void)transformEditorUpdatedTransform:(TDTransform *)transform requiresStackUpdate:(BOOL)requiresStackUpdate;
 
 @end
 

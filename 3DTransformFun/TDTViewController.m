@@ -9,10 +9,9 @@
 #import "TDTViewController.h"
 #import "TDTTransformDemoView.h"
 #import "TDTTransformStackViewController.h"
-#import "TDTTransformTypeViewController.h"
 #import "TDTTransformEditorViewController.h"
 
-@interface TDTViewController () <TransformStackDelegate,TransformTypeDelegate,TransformEditorDelegate,UITextFieldDelegate>
+@interface TDTViewController () <TransformStackDelegate,TransformEditorDelegate>
 
 @property (strong,nonatomic) TDTransform* currentTransform;
 
@@ -20,19 +19,18 @@
 @property (strong, nonatomic) IBOutlet TDTTransformStackViewController *transformStackVC;
 @property (strong, nonatomic) IBOutlet TDTTransformEditorViewController *transformEditorVC;
 
-#pragma mark - Controls
-@property (strong, nonatomic) IBOutlet UIButton *typeButton;
-@property (strong, nonatomic) IBOutlet UITextField *nameField;
+#pragma mark - Animation
 @property (strong, nonatomic) IBOutlet UIButton *animateButton;
+@property (nonatomic) BOOL isAnimating;
+
+#pragma mark - Anchor point
 @property (strong, nonatomic) IBOutlet UILabel *anchorPointXLabel;
-@property (strong, nonatomic) UIPopoverController *popover;
 @property (strong, nonatomic) IBOutlet UILabel *anchorPointYLabel;
 @property (strong, nonatomic) IBOutlet UILabel *anchorPointZLabel;
 - (IBAction)anchorChanged:(UIStepper *)sender;
 
-#pragma mark - Transform
+#pragma mark - Demo view
 @property (strong, nonatomic) IBOutlet TDTTransformDemoView *transformView;
-@property (nonatomic) BOOL isAnimating;
 
 @end
 
@@ -45,20 +43,11 @@
     [self updateAnchorPointLabels];
 }
 
-
-
 #pragma mark - Segues
 
 -(void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
-    if ([segue.identifier isEqualToString:@"chooseTransformType"])
-    {
-        TDTTransformTypeViewController *vc = (TDTTransformTypeViewController*)segue.destinationViewController;
-        vc.delegate = self;
-        vc.transformType = self.currentTransform.type;
-        self.popover = ((UIStoryboardPopoverSegue*)segue).popoverController;
-    }
-    else if ([segue.identifier isEqualToString:@"embedTable"])
+    if ([segue.identifier isEqualToString:@"embedTable"])
     {
         self.transformStackVC = (TDTTransformStackViewController*)segue.destinationViewController;
         self.transformStackVC.delegate = self;
@@ -93,56 +82,24 @@
     [self transformStackChangedData:stack];
 }
 
-
-#pragma mark - TransformTypeChooserDelegate
--(void)transformTypeSelected:(TransformType)transformType
-{
-    [self.popover dismissPopoverAnimated:YES];
-    self.currentTransform.type = transformType;
-    self.currentTransform.transform = CATransform3DIdentity;
-    [self.typeButton setTitle:[TDTransform nameForTransformType:transformType] forState:UIControlStateNormal];
-    [self.transformStackVC updatedTransform:self.currentTransform];
-    self.transformEditorVC.transform = self.currentTransform;
-}
-
 #pragma mark - TransformEditorDelegate
 
--(void)transformEditorUpdatedTransform:(TDTransform *)transform
+-(void)transformEditorUpdatedTransform:(TDTransform *)transform requiresStackUpdate:(BOOL)requiresStackUpdate
 {
+    if (requiresStackUpdate)
+    {
+        [self.transformStackVC updatedTransform:transform];
+    }
     [self transformStackChangedData:self.transformStackVC];
 }
 
-#pragma mark UITextFieldDelegate
 
--(BOOL)textFieldShouldReturn:(UITextField *)textField
-{
-    if (textField == self.nameField)
-    {
-        [self.nameField resignFirstResponder];
-        return YES;
-    }
-    return YES;
-}
-
--(void)textFieldDidEndEditing:(UITextField *)textField
-{
-    if (textField == self.nameField)
-    {
-        self.currentTransform.name = textField.text;
-        [self.transformStackVC updatedTransform:self.currentTransform];
-    }
-}
 
 #pragma mark Accessors
 
 -(void)setCurrentTransform:(TDTransform *)currentTransform
 {
     _currentTransform = currentTransform;
-    BOOL hideAccessories = currentTransform ? NO : YES;
-    self.typeButton.hidden = hideAccessories;
-    self.nameField.hidden = hideAccessories;
-    [self.typeButton setTitle:[TDTransform nameForTransformType:currentTransform.type] forState:UIControlStateNormal];
-    self.nameField.text = currentTransform.name;
     self.transformEditorVC.transform = currentTransform;
 }
 
@@ -222,7 +179,6 @@
 
     CGFloat edge = self.transformView.bounds.size.width;
     self.transformView.anchorPointIndicator.position = CGPointMake(edge * anchorPoint.x, edge * anchorPoint.y);
-    //TODO: This isn't working
-//    self.anchorPointIndicator.transform = CATransform3DMakeTranslation(0.0, 0.0, -z);
 }
+
 @end

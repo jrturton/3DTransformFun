@@ -16,7 +16,6 @@
 {
     TDTransform *newTransform = [[self alloc] init];
     newTransform.type = TransformTypeRotation;
-    newTransform.name = @"New";
     return newTransform;
 }
 
