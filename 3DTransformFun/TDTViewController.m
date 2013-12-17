@@ -33,38 +33,16 @@
 #pragma mark - Transform
 @property (strong, nonatomic) IBOutlet TDTTransformDemoView *transformView;
 @property (nonatomic) BOOL isAnimating;
-@property (strong, nonatomic) CAShapeLayer *anchorPointIndicator;
 
 @end
 
 @implementation TDTViewController
-{
-    CGRect originalFrame;
-}
+
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-	// Do any additional setup after loading the view, typically from a nib.
-    CATransform3D sublayerTransform = CATransform3DIdentity;
-    sublayerTransform.m34 = 0.0005;
-    self.view.layer.sublayerTransform = sublayerTransform;
-    CATransformLayer *transformLayer = [CATransformLayer layer];
-    transformLayer.sublayerTransform = sublayerTransform;
-    [self.transformView.layer addSublayer:transformLayer];
-    transformLayer.frame = self.transformView.bounds;
-    CAShapeLayer *anchorPointIndicator = [CAShapeLayer layer];
-    anchorPointIndicator.path = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(-5.0,-5.0,10.0,10.0)].CGPath;
-    anchorPointIndicator.fillColor = [UIColor redColor].CGColor;
-    [transformLayer addSublayer:anchorPointIndicator];
-    self.anchorPointIndicator = anchorPointIndicator;
     [self updateAnchorPointLabels];
-}
-
--(void)viewDidAppear:(BOOL)animated
-{
-    [super viewDidAppear:animated];
-    originalFrame = self.transformView.frame;
 }
 
 
@@ -98,7 +76,7 @@
 {
     BOOL restartAnimation = self.isAnimating;
     self.isAnimating = NO;
-    self.transformView.layer.transform = [stack allTransforms];
+    self.transformView.gridLayer.transform = [stack allTransforms];
     self.isAnimating = restartAnimation;
 }
 -(void)transformStack:(TDTTransformStackViewController *)stack selectedTransform:(TDTransform *)transform
@@ -170,16 +148,23 @@
 
 -(void)setIsAnimating:(BOOL)isAnimating
 {
+
+    CATransform3D transform = [self.transformStackVC allTransforms];
     if (!isAnimating)
     {
-        [self.transformView.layer removeAllAnimations];
-        self.transformView.layer.transform = [self.transformStackVC allTransforms];
+        [self.transformView.gridLayer removeAllAnimations];
+        self.transformView.gridLayer.transform = transform;
     }
     else
     {
-        [UIView animateWithDuration:1.0 delay:0.0 options:UIViewAnimationOptionAutoreverse | UIViewAnimationOptionRepeat animations:^{
-            self.transformView.layer.transform = CATransform3DIdentity;
-        } completion:nil];
+        CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:@"transform"];
+        animation.fromValue = [NSValue valueWithCATransform3D:transform];
+        animation.toValue = [NSValue valueWithCATransform3D:CATransform3DIdentity];
+        animation.duration = 1.0;
+        animation.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+        animation.autoreverses = YES;
+        animation.repeatCount = HUGE_VALF;
+        [self.transformView.gridLayer addAnimation:animation forKey:@"transform"];
     }
     _isAnimating = isAnimating;
     self.animateButton.selected = isAnimating;
@@ -199,8 +184,8 @@
     else
         roundedValue = (CGFloat)sender.value;
 
-    CGPoint anchorPoint = self.transformView.layer.anchorPoint;
-    CGFloat z = self.transformView.layer.anchorPointZ;
+    CGPoint anchorPoint = self.transformView.gridLayer.anchorPoint;
+    CGFloat z = self.transformView.gridLayer.anchorPointZ;
 
     switch (sender.tag)
     {
@@ -222,30 +207,22 @@
 -(void)setTransformAnchorPoint:(CGPoint)anchorPoint z:(CGFloat)z
 {
     self.isAnimating = NO;
-    [CATransaction begin];
-    [CATransaction setDisableActions:YES];
-    CATransform3D currentTransform = self.transformView.layer.transform;
-    self.transformView.layer.transform = CATransform3DIdentity;
-    self.transformView.layer.anchorPoint = anchorPoint;
-    self.transformView.layer.anchorPointZ = z;
-    self.transformView.frame = originalFrame;
-    self.transformView.layer.transform = currentTransform;
-    [CATransaction commit];
+    [self.transformView setGridAnchorPoint:anchorPoint z:z];
     [self updateAnchorPointLabels];
 }
 
 -(void)updateAnchorPointLabels
 {
-    CGPoint anchorPoint = self.transformView.layer.anchorPoint;
-    CGFloat z = self.transformView.layer.anchorPointZ;
+    CGPoint anchorPoint = self.transformView.gridLayer.anchorPoint;
+    CGFloat z = self.transformView.gridLayer.anchorPointZ;
 
     self.anchorPointXLabel.text = [NSString stringWithFormat:@"X: %.1f",anchorPoint.x];
     self.anchorPointYLabel.text = [NSString stringWithFormat:@"Y: %.1f",anchorPoint.y];
     self.anchorPointZLabel.text = [NSString stringWithFormat:@"Z: %.0f", z];
 
     CGFloat edge = self.transformView.bounds.size.width;
-    self.anchorPointIndicator.position = CGPointMake(edge * anchorPoint.x, edge * anchorPoint.y);
+    self.transformView.anchorPointIndicator.position = CGPointMake(edge * anchorPoint.x, edge * anchorPoint.y);
     //TODO: This isn't working
-    self.anchorPointIndicator.transform = CATransform3DMakeTranslation(0.0, 0.0, -z);
+//    self.anchorPointIndicator.transform = CATransform3DMakeTranslation(0.0, 0.0, -z);
 }
 @end

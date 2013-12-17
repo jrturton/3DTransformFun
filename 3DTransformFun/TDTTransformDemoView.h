@@ -10,4 +10,7 @@
 
 @interface TDTTransformDemoView : UIView
 
+@property (nonatomic, readonly) CALayer *gridLayer;
+@property (nonatomic, readonly) CALayer *anchorPointIndicator;
+-(void)setGridAnchorPoint:(CGPoint)anchorPoint z:(CGFloat)anchorPointZ;
 @end

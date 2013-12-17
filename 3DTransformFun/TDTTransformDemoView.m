@@ -8,29 +8,87 @@
 
 #import "TDTTransformDemoView.h"
 
+@interface TDTTransformDemoView ()
+@property(nonatomic, strong) CATransformLayer *transformLayer;
+@property (nonatomic, strong) CALayer *gridLayer;
+@property (nonatomic, strong) CALayer *anchorPointIndicator;
+@end
+
+const CGSize gridSize = (CGSize){.width = 600.0, .height = 600.0};
+
 @implementation TDTTransformDemoView
 
 - (id)initWithFrame:(CGRect)frame
 {
-    frame.size = CGSizeMake(600, 600);
+    frame.size = gridSize;
     self = [super initWithFrame:frame];
     if (self) {
-        // Initialization code
+        [self commonSetup];
     }
     return self;
 }
 
+-(id)initWithCoder:(NSCoder *)coder
+{
+    self = [super initWithCoder:coder];
+    if (self)
+    {
+        [self commonSetup];
+    }
+
+    return self;
+}
+
+
+-(void)commonSetup
+{
+    CATransformLayer *transformLayer = [CATransformLayer layer];
+    [self.layer addSublayer:transformLayer];
+    self.transformLayer = transformLayer;
+    CATransform3D sublayerTransform = CATransform3DIdentity;
+    sublayerTransform.m34 = -1.0 / gridSize.width;
+    self.layer.sublayerTransform = sublayerTransform;
+
+    CALayer *gridLayer = [CALayer layer];
+    gridLayer.contents = (__bridge id)[self gridContentsImage].CGImage;
+    [transformLayer addSublayer:gridLayer];
+    self.gridLayer = gridLayer;
+    gridLayer.frame = (CGRect){.size = gridSize};
+
+    CAShapeLayer *anchorPointIndicator = [CAShapeLayer layer];
+    anchorPointIndicator.path = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(-5.0,-5.0,10.0,10.0)].CGPath;
+    anchorPointIndicator.fillColor = [UIColor redColor].CGColor;
+    [transformLayer addSublayer:anchorPointIndicator];
+    self.anchorPointIndicator = anchorPointIndicator;
+}
+
 -(void)setFrame:(CGRect)frame
 {
-    frame.size = CGSizeMake(600.0, 600.0);
+    frame.size = gridSize;
     [super setFrame:frame];
 }
 
-- (void)drawRect:(CGRect)rect
+-(void)setGridAnchorPoint:(CGPoint)anchorPoint z:(CGFloat)anchorPointZ
 {
-    // We're always 600 x 600, get over it.
-    
-    CGRect drawingRect = self.bounds;
+    [CATransaction begin];
+    [CATransaction setDisableActions:YES];
+    CATransform3D currentTransform = self.gridLayer.transform;
+    self.gridLayer.transform = CATransform3DIdentity;
+    self.gridLayer.anchorPoint = anchorPoint;
+    self.gridLayer.anchorPointZ = anchorPointZ;
+    CGFloat newX = gridSize.width * anchorPoint.x;
+    CGFloat newY = gridSize.height * anchorPoint.y;
+
+    self.gridLayer.position = CGPointMake(newX, newY);
+    self.gridLayer.transform = currentTransform;
+    [CATransaction commit];
+}
+
+
+- (UIImage *)gridContentsImage
+{
+    CGRect drawingRect = (CGRect){.size= gridSize};
+    UIGraphicsBeginImageContextWithOptions(drawingRect.size, YES, 0);
     CGContextRef c = UIGraphicsGetCurrentContext();
     
     [[UIColor blackColor] set];
@@ -39,19 +97,19 @@
     
     // Labels
     UIFont *labelFont = [UIFont boldSystemFontOfSize:50];
-    [@"TOP" drawInRect:CGRectMake(0.0, 0.0, 600.0, 50.0) withFont:labelFont lineBreakMode:NSLineBreakByTruncatingTail alignment:NSTextAlignmentCenter];
+    [@"TOP" drawInRect:CGRectMake(0.0, 0.0, gridSize.width, 50.0) withFont:labelFont lineBreakMode:NSLineBreakByTruncatingTail alignment:NSTextAlignmentCenter];
     CGContextTranslateCTM(c, 300, 300);
     CGContextRotateCTM(c, M_PI_2);
     CGContextTranslateCTM(c, -300, -300);
-    [@"RIGHT" drawInRect:CGRectMake(0.0, 0.0, 600.0, 50.0) withFont:labelFont lineBreakMode:NSLineBreakByTruncatingTail alignment:NSTextAlignmentCenter];
+    [@"RIGHT" drawInRect:CGRectMake(0.0, 0.0, gridSize.width, 50.0) withFont:labelFont lineBreakMode:NSLineBreakByTruncatingTail alignment:NSTextAlignmentCenter];
     CGContextTranslateCTM(c, 300, 300);
     CGContextRotateCTM(c, M_PI_2);
     CGContextTranslateCTM(c, -300, -300);
-    [@"BOTTOM" drawInRect:CGRectMake(0.0, 0.0, 600.0, 50.0) withFont:labelFont lineBreakMode:NSLineBreakByTruncatingTail alignment:NSTextAlignmentCenter];
+    [@"BOTTOM" drawInRect:CGRectMake(0.0, 0.0, gridSize.width, 50.0) withFont:labelFont lineBreakMode:NSLineBreakByTruncatingTail alignment:NSTextAlignmentCenter];
     CGContextTranslateCTM(c, 300, 300);
     CGContextRotateCTM(c, M_PI_2);
     CGContextTranslateCTM(c, -300, -300);
-    [@"LEFT" drawInRect:CGRectMake(0.0, 0.0, 600.0, 50.0) withFont:labelFont lineBreakMode:NSLineBreakByTruncatingTail alignment:NSTextAlignmentCenter];
+    [@"LEFT" drawInRect:CGRectMake(0.0, 0.0, gridSize.width, 50.0) withFont:labelFont lineBreakMode:NSLineBreakByTruncatingTail alignment:NSTextAlignmentCenter];
     
     CGContextSetLineWidth(c, 2.0);
     CGRect gridRect = CGRectInset(drawingRect,50,50);
@@ -68,9 +126,10 @@
         CGContextStrokeRect(c, gridRect);
         gridRect = CGRectInset(gridRect, 0, 50);
     }
-    
-    
-    
+
+    UIImage *returnImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return returnImage;
 }
 
 @end
