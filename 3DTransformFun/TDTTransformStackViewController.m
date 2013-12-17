@@ -37,12 +37,6 @@
     newTransformButton.frame = CGRectMake(0.0,0.0,self.tableView.frame.size.width,44.0);
     self.tableView.tableHeaderView = newTransformButton;
     self.tableView.contentOffset = CGPointZero;
-
-    // Uncomment the following line to preserve selection between presentations.
-    // self.clearsSelectionOnViewWillAppear = NO;
- 
-    // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-    // self.navigationItem.rightBarButtonItem = self.editButtonItem;
 }
 
 -(void)viewDidAppear:(BOOL)animated
@@ -51,18 +45,14 @@
     [self.delegate transformStack:self selectedTransform:[self.transformStack objectAtIndex:0]];
 }
 
-- (void)didReceiveMemoryWarning
-{
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
-}
-
 #pragma mark - Data stack
 
 -(NSMutableArray*)transformStack
 {
-    if (_transformStack) return _transformStack;
-    _transformStack = [NSMutableArray arrayWithObject:[TDTransform transform]];
+    if (!_transformStack)
+    {
+        _transformStack = [NSMutableArray arrayWithObject:[TDTransform transform]];
+    }
     return _transformStack;
 }
 
