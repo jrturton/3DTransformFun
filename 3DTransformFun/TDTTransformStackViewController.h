@@ -14,6 +14,7 @@
 @protocol TransformStackDelegate <NSObject>
 
 -(void)transformStackChangedData:(TDTTransformStackViewController*)stack;
+-(void)transformStack:(TDTTransformStackViewController *)stack deletedTransform:(TDTransform*)transform;
 -(void)transformStack:(TDTTransformStackViewController*)stack selectedTransform:(TDTransform*)transform;
 
 @end

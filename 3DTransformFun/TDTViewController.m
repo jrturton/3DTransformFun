@@ -12,8 +12,6 @@
 #import "TDTTransformTypeViewController.h"
 #import "TDTTransformEditorViewController.h"
 
-#import <QuartzCore/QuartzCore.h>
-
 @interface TDTViewController () <TransformStackDelegate,TransformTypeDelegate,TransformEditorDelegate,UITextFieldDelegate>
 
 @property (strong,nonatomic) TDTransform* currentTransform;
@@ -88,6 +86,16 @@
     self.currentTransform = transform;
 }
 
+-(void)transformStack:(TDTTransformStackViewController *)stack deletedTransform:(TDTransform *)transform
+{
+    if (self.currentTransform == transform)
+    {
+        self.currentTransform = nil;
+    }
+    [self transformStackChangedData:stack];
+}
+
+
 #pragma mark - TransformTypeChooserDelegate
 -(void)transformTypeSelected:(TransformType)transformType
 {
@@ -103,18 +111,28 @@
 
 -(void)transformEditorUpdatedTransform:(TDTransform *)transform
 {
-    [self.transformStackVC updatedTransform:transform];
+    [self transformStackChangedData:self.transformStackVC];
 }
 
 #pragma mark UITextFieldDelegate
 
--(BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string
+-(BOOL)textFieldShouldReturn:(UITextField *)textField
 {
     if (textField == self.nameField)
-        self.currentTransform.name = textField.text;
-    [self.transformStackVC updatedTransform:self.currentTransform];
-    
+    {
+        [self.nameField resignFirstResponder];
+        return YES;
+    }
     return YES;
+}
+
+-(void)textFieldDidEndEditing:(UITextField *)textField
+{
+    if (textField == self.nameField)
+    {
+        self.currentTransform.name = textField.text;
+        [self.transformStackVC updatedTransform:self.currentTransform];
+    }
 }
 
 #pragma mark Accessors
@@ -122,14 +140,12 @@
 -(void)setCurrentTransform:(TDTransform *)currentTransform
 {
     _currentTransform = currentTransform;
+    BOOL hideAccessories = currentTransform ? NO : YES;
+    self.typeButton.hidden = hideAccessories;
+    self.nameField.hidden = hideAccessories;
     [self.typeButton setTitle:[TDTransform nameForTransformType:currentTransform.type] forState:UIControlStateNormal];
     self.nameField.text = currentTransform.name;
     self.transformEditorVC.transform = currentTransform;
-}
-
-- (void)viewDidUnload {
-    [self setAnimateButton:nil];
-    [super viewDidUnload];
 }
 
 -(void)setIsAnimating:(BOOL)isAnimating
@@ -146,5 +162,6 @@
         } completion:nil];
     }
     _isAnimating = isAnimating;
+    self.animateButton.selected = isAnimating;
 }
 @end

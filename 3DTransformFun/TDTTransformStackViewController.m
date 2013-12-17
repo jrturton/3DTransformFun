@@ -135,9 +135,10 @@
 {
     if (editingStyle == UITableViewCellEditingStyleDelete) {
         // Delete the row from the data source
+        TDTransform *transform = [self.transformStack objectAtIndex:indexPath.row];
         [self.transformStack removeObjectAtIndex:indexPath.row];
         [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
-        [self.delegate transformStackChangedData:self];
+        [self.delegate transformStack:self deletedTransform:transform];
     }   
 }
 
