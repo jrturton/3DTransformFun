@@ -17,15 +17,6 @@
 
 @implementation TDTTransformStackViewController
 
-- (id)initWithStyle:(UITableViewStyle)style
-{
-    self = [super initWithStyle:style];
-    if (self) {
-        // Custom initialization
-    }
-    return self;
-}
-
 - (void)viewDidLoad
 {
     [super viewDidLoad];
@@ -37,6 +28,7 @@
     newTransformButton.frame = CGRectMake(0.0,0.0,self.tableView.frame.size.width,44.0);
     self.tableView.tableHeaderView = newTransformButton;
     self.tableView.contentOffset = CGPointZero;
+    self.tableView.contentInset = (UIEdgeInsets){.top = 20.0};
 }
 
 -(void)viewDidAppear:(BOOL)animated
